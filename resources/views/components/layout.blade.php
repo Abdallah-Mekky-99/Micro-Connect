@@ -12,7 +12,7 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
 
-<body class="min-h-screen flex flex-col bg-base-200 font-sans pb-16 lg:pb-0">
+<body x-data="{ mobileSearchOpen: false }" class="min-h-screen flex flex-col bg-base-200 font-sans pb-16 lg:pb-0" :class="{ 'overflow-hidden': mobileSearchOpen }">
     {{-- 1. TOP NAVIGATION (Sticky & Frosted Glass) --}}
     <nav class="navbar bg-base-100/80 backdrop-blur-md border-b border-base-200 px-4 sticky top-0 z-50">
         <div class="max-w-7xl mx-auto w-full flex justify-between items-center">
@@ -172,16 +172,23 @@
         <aside class="hidden lg:flex flex-col w-80 shrink-0 gap-6 sticky top-22 h-[calc(100vh-6rem)]">
 
             {{-- Search Bar --}}
-            <div class="relative group">
-                <input type="text" placeholder="Search..."
-                    class="input input-bordered w-full rounded-full bg-base-200 focus:bg-base-100 pl-12 transition-colors border-none focus:ring-2 focus:ring-primary/50" />
+            <form action="{{ route('chirps.index') }}" method="GET" class="relative group">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Search..."
+                    class="input input-bordered w-full rounded-full bg-base-200 focus:bg-base-100 pl-12 pr-10 transition-colors border-none focus:ring-2 focus:ring-primary/50" />
                 <svg xmlns="http://www.w3.org/2000/svg"
                     class="absolute left-4 top-3.5 h-5 w-5 text-base-content/50 group-focus-within:text-primary transition-colors"
                     fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                     <path stroke-linecap="round" stroke-linejoin="round"
                         d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-            </div>
+                @if(request('search'))
+                    <a href="{{ route('chirps.index') }}" class="absolute right-4 top-3.5 text-base-content/50 hover:text-base-content transition-colors" title="Clear search">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </a>
+                @endif
+            </form>
 
             {{-- Who to Follow Widget --}}
             <div class="bg-base-100 rounded-2xl border border-base-200 overflow-hidden shadow-sm">
@@ -256,7 +263,7 @@
             <span class="btm-nav-label text-[10px] font-medium mt-1">Home</span>
         </a>
 
-        <a href="#" class="text-base-content/60 hover:text-base-content">
+        <a href="#" @click.prevent="mobileSearchOpen = true; $nextTick(() => $refs.mobileSearchInput.focus())" class="text-base-content/60 hover:text-base-content">
             <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                 fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round">
@@ -296,6 +303,50 @@
             <path d="M12 5v14" />
         </svg>
     </button>
+
+    {{-- Mobile Search Overlay --}}
+    <div x-show="mobileSearchOpen" 
+         x-transition:enter="transition ease-out duration-200"
+         x-transition:enter-start="opacity-0 translate-y-4"
+         x-transition:enter-end="opacity-100 translate-y-0"
+         x-transition:leave="transition ease-in duration-150"
+         x-transition:leave-start="opacity-100 translate-y-0"
+         x-transition:leave-end="opacity-0 translate-y-4"
+         class="fixed inset-0 z-[100] bg-base-100 p-4 flex flex-col md:hidden"
+         style="display: none;">
+        
+        <div class="flex items-center gap-3 mb-6">
+            <button @click="mobileSearchOpen = false" class="btn btn-ghost btn-circle btn-sm">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+            </button>
+            <h3 class="text-lg font-bold">Search Chirps</h3>
+        </div>
+
+        <form action="{{ route('chirps.index') }}" method="GET" class="relative w-full">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Search micro-connect..."
+                class="input input-bordered w-full rounded-full bg-base-200 focus:bg-base-100 pl-12 pr-10 transition-colors border-none focus:ring-2 focus:ring-primary/50"
+                x-ref="mobileSearchInput" />
+            <svg xmlns="http://www.w3.org/2000/svg"
+                class="absolute left-4 top-3.5 h-5 w-5 text-base-content/50"
+                fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round"
+                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+            </svg>
+            @if(request('search'))
+                <a href="{{ route('chirps.index') }}" class="absolute right-4 top-3.5 text-base-content/50 hover:text-base-content transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                </a>
+            @endif
+        </form>
+
+        <div class="mt-6 text-xs text-base-content/50 px-4">
+            Press enter to search. You can search for messages, keywords, or tags.
+        </div>
+    </div>
 </body>
 
 </html>

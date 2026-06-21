@@ -6,6 +6,7 @@ use App\Http\Requests\Chirps\StoreChirpRequest;
 use App\Http\Requests\Chirps\UpdateChirpRequest;
 use App\Models\Chirp;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class ChirpController extends Controller
@@ -15,10 +16,12 @@ class ChirpController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         /** @var Chirp[] $chirps */
         $chirps = Chirp::query()
+            ->when($request->filled('search'), fn($initialQ)
+            => $initialQ->where('message', 'like', '%' . $request->search . '%'))
             ->with([
                 'user' => fn($q) => $q->withIsFollowed(),
                 'topLevelComments',
